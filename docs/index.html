@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Tier Pricing Agent</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --warn: #f0883e;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --tag-bg: #1f3a5f;
+      --terminal-bg: #010409;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    nav .logo { font-weight: 600; font-size: 15px; color: var(--text); }
+    nav .breadcrumb { color: var(--muted); font-size: 14px; }
+    nav .breadcrumb a { color: var(--accent); text-decoration: none; }
+    nav .breadcrumb a:hover { text-decoration: underline; }
+    nav .spacer { flex: 1; }
+    nav .btn {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    nav .btn:hover { opacity: 0.9; }
+
+    /* HERO */
+    .hero {
+      padding: 60px 32px 48px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .hero .eyebrow {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tag {
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--surface);
+    }
+    .tag.green { border-color: var(--accent2); color: var(--accent2); }
+    .tag.blue { border-color: var(--accent); color: var(--accent); }
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 14px;
+    }
+    .hero p.sub {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 680px;
+      margin-bottom: 28px;
+    }
+    .hero .stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .stat { text-align: left; }
+    .stat .val { font-size: 24px; font-weight: 700; color: var(--accent); }
+    .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* DIVIDER */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* SECTIONS */
+    .section {
+      padding: 48px 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .section h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .section .desc {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    /* HOW IT WORKS */
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .how-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .how-card .step {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .how-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .how-card p { font-size: 13px; color: var(--muted); }
+
+    /* TOOLS */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .tool-card .fn {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      color: var(--accent2);
+      margin-bottom: 6px;
+    }
+    .tool-card p { font-size: 13px; color: var(--muted); }
+
+    /* TERMINAL */
+    .scenario {
+      margin-bottom: 28px;
+    }
+    .scenario-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .scenario-num {
+      background: var(--accent);
+      color: #0d1117;
+      font-size: 11px;
+      font-weight: 700;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .scenario-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .scenario-prompt {
+      font-size: 13px;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 10px;
+      padding-left: 32px;
+    }
+    .terminal {
+      background: var(--terminal-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .terminal-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot.red { background: #ff5f57; }
+    .dot.yellow { background: #febc2e; }
+    .dot.green { background: #28c840; }
+    .terminal-body {
+      padding: 18px 20px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    .t-cmd { color: #58a6ff; }
+    .t-label { color: #f0883e; font-weight: 700; }
+    .t-key { color: #8b949e; }
+    .t-val { color: #3fb950; }
+    .t-highlight { color: #e6edf3; font-weight: 600; }
+    .t-dim { color: #484f58; }
+    .t-sep { color: #30363d; }
+    .t-warn { color: #f0883e; }
+    .t-save { color: #d2a8ff; }
+
+    /* PRICING TABLE */
+    .pricing-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #0d1117;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+    tbody td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      vertical-align: top;
+    }
+    tbody tr:hover td { background: var(--surface); }
+    .price { font-weight: 700; color: var(--accent); }
+    .flagship-row td { background: rgba(88, 166, 255, 0.05); }
+    .flagship-badge {
+      font-size: 10px;
+      background: var(--accent);
+      color: #0d1117;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .savings { color: var(--accent2); font-weight: 600; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 26px; }
+      .hero { padding: 36px 20px 32px; }
+      .section { padding: 36px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="logo">⚡ adixit22</span>
+  <span class="breadcrumb">/ <a href="https://github.com/adixit22/Payment-Tier-Pricing-agent">Payment-Tier-Pricing-agent</a></span>
+  <span class="spacer"></span>
+  <a class="btn" href="https://github.com/adixit22/Payment-Tier-Pricing-agent" target="_blank">View on GitHub</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow">
+    <span class="tag blue">Claude Agent SDK</span>
+    <span class="tag blue">Tool Use</span>
+    <span class="tag green">Python</span>
+    <span class="tag">B2B SaaS</span>
+    <span class="tag">Portfolio Project</span>
+  </div>
+  <h1>Payment Tier Pricing Agent</h1>
+  <p class="sub">
+    An AI agent built on Anthropic's Claude Agent SDK that understands natural language pricing queries,
+    calls deterministic tools, and returns structured quotes, revenue projections, and tier recommendations
+    for a two-track B2B SaaS platform.
+  </p>
+  <div class="stats">
+    <div class="stat"><div class="val">5</div><div class="lbl">Pricing Tools</div></div>
+    <div class="stat"><div class="val">17</div><div class="lbl">Unit Tests</div></div>
+    <div class="stat"><div class="val">2</div><div class="lbl">Product Tracks</div></div>
+    <div class="stat"><div class="val">20%</div><div class="lbl">Bundle Discount</div></div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- HOW IT WORKS -->
+<div class="section">
+  <h2>How it works</h2>
+  <p class="desc">The agent follows the classic LLM + Tools pattern. Claude handles intent parsing and reasoning; deterministic Python functions handle the math.</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="step">Step 1</div>
+      <h3>User sends a prompt</h3>
+      <p>Natural language like "Quote me Elite + Creator Pro for 8 seats" or "Project revenue for 100 Starter customers."</p>
+    </div>
+    <div class="how-card">
+      <div class="step">Step 2</div>
+      <h3>Claude identifies the tool</h3>
+      <p>The model reads the tool schema and decides which function to call, plus what parameters to pass.</p>
+    </div>
+    <div class="how-card">
+      <div class="step">Step 3</div>
+      <h3>Tool runs deterministically</h3>
+      <p>Python functions do the actual math against pricing_data.py — no hallucinated numbers.</p>
+    </div>
+    <div class="how-card">
+      <div class="step">Step 4</div>
+      <h3>Claude wraps the result</h3>
+      <p>The agent formats the tool output into a clear, human-readable response with context and caveats.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- TOOLS -->
+<div class="section">
+  <h2>Exposed tools</h2>
+  <p class="desc">Five functions registered in the agent's tool schema. Claude decides which to call based on the user's request.</p>
+  <div class="tools-grid">
+    <div class="tool-card">
+      <div class="fn">quote_package()</div>
+      <p>Returns a line-item quote for any hiring tier, creator tier, or bundle. Applies the 20% All-Access discount automatically when both tracks are selected.</p>
+    </div>
+    <div class="tool-card">
+      <div class="fn">project_revenue()</div>
+      <p>Takes a cohort mix (count + tier per segment) and returns total ARR, per-segment breakdown, and blended ARPA for the book of business.</p>
+    </div>
+    <div class="tool-card">
+      <div class="fn">recommend_tier()</div>
+      <p>Given annual hire count and campaign count, recommends the best-fit tier(s) and explains the reasoning.</p>
+    </div>
+    <div class="tool-card">
+      <div class="fn">list_all_bundles()</div>
+      <p>Returns the full All-Access bundle catalog with list prices, discounted prices, and savings for every valid combination.</p>
+    </div>
+    <div class="tool-card">
+      <div class="fn">get_tier_details()</div>
+      <p>Returns the full feature set and pricing for a specific tier — seats, postings, outreach limits, and best-fit use case.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- DEMO -->
+<div class="section">
+  <h2>Live demo scenarios</h2>
+  <p class="desc">These are the exact scenarios from demo_offline.py, showing what the tool layer returns before Claude wraps the output.</p>
+
+  <!-- Scenario 1 -->
+  <div class="scenario">
+    <div class="scenario-header">
+      <div class="scenario-num">1</div>
+      <div class="scenario-title">Growing startup, Hiring Pro only</div>
+    </div>
+    <p class="scenario-prompt">"We're hiring about 8 people this year. Give me a quote for the Pro plan."</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+      </div>
+      <div class="terminal-body"><span class="t-cmd">$ python agent.py --prompt "Quote Hiring Pro"</span>
+
+<span class="t-label">=== Quote ===</span>
+<span class="t-key">  plan              :</span> <span class="t-val">Hiring Pro</span>
+<span class="t-key">  billing           :</span> <span class="t-val">Annual</span>
+<span class="t-key">  annual_price      :</span> <span class="t-val">$3,999</span>
+<span class="t-key">  monthly_equiv     :</span> <span class="t-val">$333 / mo</span>
+<span class="t-key">  admin_seats       :</span> <span class="t-val">5</span>
+<span class="t-key">  active_postings   :</span> <span class="t-val">3</span>
+<span class="t-key">  outreach_per_month:</span> <span class="t-val">40 messages</span>
+<span class="t-key">  extra_post_price  :</span> <span class="t-val">$149 / post</span>
+<span class="t-key">  bundle_discount   :</span> <span class="t-val">Not applied (single track)</span>
+<span class="t-key">  best_for          :</span> <span class="t-val">Growing companies hiring 5–15 roles/yr</span></div>
+    </div>
+  </div>
+
+  <!-- Scenario 2 -->
+  <div class="scenario">
+    <div class="scenario-header">
+      <div class="scenario-num">2</div>
+      <div class="scenario-title">Mid-market company, flagship bundle</div>
+    </div>
+    <p class="scenario-prompt">"We do high-volume hiring AND run creator campaigns at scale. What's the all-in package?"</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+      </div>
+      <div class="terminal-body"><span class="t-cmd">$ python agent.py --prompt "Quote Elite + Creator Pro bundle"</span>
+
+<span class="t-label">=== Quote ===</span>
+<span class="t-key">  plan              :</span> <span class="t-val">Elite + Creator Pro (All-Access)</span>
+<span class="t-key">  hiring_track      :</span> <span class="t-val">Elite  →  $11,999</span>
+<span class="t-key">  creator_track     :</span> <span class="t-val">Creator Pro  →  $7,999</span>
+<span class="t-key">  list_price        :</span> <span class="t-val">$19,998</span>
+<span class="t-warn">  all_access_discount:</span> <span class="t-warn">−20%  (−$4,000)</span>
+<span class="t-key">  annual_total      :</span> <span class="t-highlight">$15,998  ✓ FLAGSHIP</span>
+<span class="t-key">  admin_seats       :</span> <span class="t-val">10 (Hiring) + 7 (Creator)</span>
+<span class="t-key">  active_postings   :</span> <span class="t-val">5 concurrent</span>
+<span class="t-key">  outreach_per_month:</span> <span class="t-val">120 (Hiring) + 120 (Creator)</span>
+<span class="t-key">  campaigns         :</span> <span class="t-val">Unlimited</span></div>
+    </div>
+  </div>
+
+  <!-- Scenario 3 -->
+  <div class="scenario">
+    <div class="scenario-header">
+      <div class="scenario-num">3</div>
+      <div class="scenario-title">Nonprofit on Starter, needs extra job posts</div>
+    </div>
+    <p class="scenario-prompt">"We're a nonprofit. Starter plan is fine, but we need 3 extra job postings this month."</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+      </div>
+      <div class="terminal-body"><span class="t-cmd">$ python agent.py --prompt "Starter plan + 3 extra job posts"</span>
+
+<span class="t-label">=== Quote ===</span>
+<span class="t-key">  plan              :</span> <span class="t-val">Hiring Starter</span>
+<span class="t-key">  base_annual_price :</span> <span class="t-val">$999</span>
+<span class="t-key">  extra_posts       :</span> <span class="t-val">3  ×  $199  =  $597</span>
+<span class="t-key">  annual_total      :</span> <span class="t-highlight">$1,596</span>
+<span class="t-key">  admin_seats       :</span> <span class="t-val">1</span>
+<span class="t-key">  active_postings   :</span> <span class="t-val">1 base + 3 add-ons = 4 total</span>
+<span class="t-key">  outreach_per_month:</span> <span class="t-val">0 (upgrade to Pro for outreach)</span>
+<span class="t-key">  note              :</span> <span class="t-dim">Pro at $3,999 may be better if hiring accelerates</span></div>
+    </div>
+  </div>
+
+  <!-- Scenario 4 -->
+  <div class="scenario">
+    <div class="scenario-header">
+      <div class="scenario-num">4</div>
+      <div class="scenario-title">Year-1 revenue projection, realistic cohort mix</div>
+    </div>
+    <p class="scenario-prompt">"We have a mix of customers across tiers. Project our Year-1 ARR."</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+      </div>
+      <div class="terminal-body"><span class="t-cmd">$ python agent.py --prompt "Project revenue for 120 Starter, 55 Pro, 20 Elite, 8 Elite+CreatorPro, 15 CreatorStarter"</span>
+
+<span class="t-label">=== Projection ===</span>
+<span class="t-key">  cohort_breakdown  :</span>
+<span class="t-dim">    120  ×  Starter              →  $119,880</span>
+<span class="t-dim">     55  ×  Pro                  →  $219,945</span>
+<span class="t-dim">     20  ×  Elite                →  $239,980</span>
+<span class="t-dim">      8  ×  Elite + Creator Pro  →  $127,984  (All-Access)</span>
+<span class="t-dim">     15  ×  Creator Starter      →   $44,985</span>
+<span class="t-sep">  ─────────────────────────────────────────────</span>
+<span class="t-key">  total_customers   :</span> <span class="t-val">218</span>
+<span class="t-key">  year_1_ARR        :</span> <span class="t-highlight">$752,774</span>
+<span class="t-key">  blended_ARPA      :</span> <span class="t-val">$3,453 / customer / yr</span>
+<span class="t-key">  hiring_ARR        :</span> <span class="t-val">$707,789  (94%)</span>
+<span class="t-key">  creator_ARR       :</span> <span class="t-val">$172,969  (23%)</span>
+<span class="t-key">  bundle_ARR        :</span> <span class="t-save">$127,984  (17%  of total)</span></div>
+    </div>
+  </div>
+
+  <!-- Scenario 5 -->
+  <div class="scenario">
+    <div class="scenario-header">
+      <div class="scenario-num">5</div>
+      <div class="scenario-title">Tier recommendation by use-case</div>
+    </div>
+    <p class="scenario-prompt">"We hire about 12 people a year and run 4 creator campaigns. What tier do you recommend?"</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+      </div>
+      <div class="terminal-body"><span class="t-cmd">$ python agent.py --prompt "Recommend tier for 12 hires/yr and 4 campaigns/yr"</span>
+
+<span class="t-label">=== Recommendation ===</span>
+<span class="t-key">  hiring_profile    :</span> <span class="t-val">12 hires/yr  →  Elite</span>
+<span class="t-key">  creator_profile   :</span> <span class="t-val">4 campaigns/yr  →  Creator Pro</span>
+<span class="t-key">  recommended_bundle:</span> <span class="t-highlight">Elite + Creator Pro (All-Access)</span>
+<span class="t-key">  list_price        :</span> <span class="t-val">$19,998</span>
+<span class="t-key">  your_price        :</span> <span class="t-highlight">$15,998  (save $4,000)</span>
+<span class="t-key">  why_elite         :</span> <span class="t-dim">12 hires needs 5 concurrent postings + 120 outreach/mo</span>
+<span class="t-key">  why_creator_pro   :</span> <span class="t-dim">4 campaigns/yr warrants unlimited campaigns + 120 creator outreach/mo</span>
+<span class="t-key">  alternative       :</span> <span class="t-dim">Pro + Creator Pro at $9,598 if budget is a constraint</span></div>
+    </div>
+  </div>
+
+  <!-- Scenario 6 -->
+  <div class="scenario">
+    <div class="scenario-header">
+      <div class="scenario-num">6</div>
+      <div class="scenario-title">Full bundle catalog</div>
+    </div>
+    <p class="scenario-prompt">"Show me all the All-Access bundles and what I'd save."</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+      </div>
+      <div class="terminal-body"><span class="t-cmd">$ python agent.py --prompt "List all bundle options"</span>
+
+<span class="t-label">=== All-Access Bundles (20% off list) ===</span>
+<span class="t-key">  Starter + Creator Starter  </span>  list <span class="t-dim">$3,998</span>  →  <span class="t-val">$3,198</span>  <span class="t-save">save $800</span>
+<span class="t-key">  Pro + Creator Starter      </span>  list <span class="t-dim">$6,998</span>  →  <span class="t-val">$5,598</span>  <span class="t-save">save $1,400</span>
+<span class="t-key">  Pro + Creator Pro          </span>  list <span class="t-dim">$11,998</span> →  <span class="t-val">$9,598</span>  <span class="t-save">save $2,400</span>
+<span class="t-key">  Elite + Creator Starter    </span>  list <span class="t-dim">$14,998</span> →  <span class="t-val">$11,998</span> <span class="t-save">save $3,000</span>
+<span class="t-highlight">★ Elite + Creator Pro        </span>  list <span class="t-dim">$19,998</span> →  <span class="t-highlight">$15,998</span> <span class="t-save">save $4,000</span>  <span class="t-warn">[FLAGSHIP]</span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- PRICING -->
+<div class="section">
+  <h2>Pricing reference</h2>
+  <p class="desc">The data layer powering the agent. All prices are illustrative for this portfolio project.</p>
+
+  <div class="pricing-tabs">
+    <button class="tab-btn active" onclick="switchTab('hiring')">Hiring Track</button>
+    <button class="tab-btn" onclick="switchTab('creator')">Creator Track</button>
+    <button class="tab-btn" onclick="switchTab('bundles')">All-Access Bundles</button>
+  </div>
+
+  <div id="tab-hiring" class="tab-content active">
+    <table>
+      <thead>
+        <tr>
+          <th>Tier</th><th>Annual Price</th><th>Monthly</th><th>Admin Seats</th><th>Active Postings</th><th>Outreach / mo</th><th>Extra Post</th><th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Starter</strong></td>
+          <td class="price">$999</td>
+          <td>$99</td><td>1</td><td>1</td><td>0</td><td>$199</td>
+          <td>Startups, 1–3 hires/yr</td>
+        </tr>
+        <tr>
+          <td><strong>Pro</strong></td>
+          <td class="price">$3,999</td>
+          <td>$399</td><td>5</td><td>3</td><td>40</td><td>$149</td>
+          <td>Growing teams, 5–15 hires/yr</td>
+        </tr>
+        <tr>
+          <td><strong>Elite</strong></td>
+          <td class="price">$11,999</td>
+          <td>$1,199</td><td>10</td><td>5</td><td>120</td><td>$99</td>
+          <td>High-volume hiring, full network access</td>
+        </tr>
+        <tr>
+          <td><strong>Enterprise</strong></td>
+          <td class="price">$25,000+</td>
+          <td>Custom</td><td>Custom</td><td>Custom</td><td>Custom</td><td>Included</td>
+          <td>Large orgs, ATS integrations</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tab-creator" class="tab-content">
+    <table>
+      <thead>
+        <tr>
+          <th>Tier</th><th>Annual Price</th><th>Monthly</th><th>Admin Seats</th><th>Campaigns / mo</th><th>Creator Outreach / mo</th><th>Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Creator Starter</strong></td>
+          <td class="price">$2,999</td>
+          <td>$299</td><td>3</td><td>3</td><td>20</td>
+          <td>Brands testing 1–2 campaigns/yr</td>
+        </tr>
+        <tr>
+          <td><strong>Creator Pro</strong></td>
+          <td class="price">$7,999</td>
+          <td>$799</td><td>7</td><td>Unlimited</td><td>120</td>
+          <td>Brands running ongoing creator programs</td>
+        </tr>
+        <tr>
+          <td><strong>Enterprise</strong></td>
+          <td class="price">$20,000+</td>
+          <td>Custom</td><td>Custom</td><td>Custom</td><td>Custom</td>
+          <td>Agencies and large brands, managed campaigns</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="tab-bundles" class="tab-content">
+    <table>
+      <thead>
+        <tr>
+          <th>Bundle</th><th>List Price</th><th>All-Access Price</th><th>You Save</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Starter + Creator Starter</td>
+          <td>$3,998</td>
+          <td class="price">$3,198</td>
+          <td class="savings">$800</td>
+        </tr>
+        <tr>
+          <td>Pro + Creator Starter</td>
+          <td>$6,998</td>
+          <td class="price">$5,598</td>
+          <td class="savings">$1,400</td>
+        </tr>
+        <tr>
+          <td>Pro + Creator Pro</td>
+          <td>$11,998</td>
+          <td class="price">$9,598</td>
+          <td class="savings">$2,400</td>
+        </tr>
+        <tr>
+          <td>Elite + Creator Starter</td>
+          <td>$14,998</td>
+          <td class="price">$11,998</td>
+          <td class="savings">$3,000</td>
+        </tr>
+        <tr class="flagship-row">
+          <td><strong>Elite + Creator Pro</strong><span class="flagship-badge">FLAGSHIP</span></td>
+          <td>$19,998</td>
+          <td class="price">$15,998</td>
+          <td class="savings">$4,000</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- FOOTER -->
+<footer>
+  Built by <a href="https://github.com/adixit22" target="_blank">adixit22</a> using the
+  <a href="https://docs.anthropic.com/en/docs/agents" target="_blank">Anthropic Claude Agent SDK</a>.
+  Prices are fictional and for portfolio demonstration only.
+  <a href="https://github.com/adixit22/Payment-Tier-Pricing-agent" target="_blank">View source on GitHub →</a>
+</footer>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>
