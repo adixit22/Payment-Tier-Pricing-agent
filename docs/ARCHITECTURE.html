@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Two-Track Pricing Agent — Architecture</title>
+<style>
+  :root {
+    --accent: #c89b2a;
+    --ink: #111;
+    --muted: #4a4a4a;
+    --bg: #f6f4ef;
+    --green: #2f7a3d;
+    --blue: #2b5fa0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 40px 20px;
+    color: var(--ink);
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; font-size: 15px; }
+  .diagram {
+    background: #fff;
+    border: 1px solid #e4e0d6;
+    border-radius: 10px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .row { display: flex; gap: 18px; align-items: stretch; margin-bottom: 18px; }
+  .node { flex: 1; border-radius: 8px; padding: 16px 18px; color: #fff; font-size: 14px; line-height: 1.4; }
+  .node h3 { margin: 0 0 6px; font-size: 15px; letter-spacing: 0.3px; }
+  .node p { margin: 0; opacity: 0.95; }
+  .node-user { background: var(--blue); }
+  .node-llm { background: var(--ink); }
+  .node-data { background: var(--green); }
+  .node-output { background: var(--muted); }
+  .arrow { text-align: center; font-size: 22px; color: var(--muted); margin: -6px 0 10px; }
+  .tools-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .tool-card { background: #fff; border: 2px solid var(--accent); border-radius: 6px; padding: 10px; font-size: 13px; color: var(--ink); }
+  .tool-card code { display: block; font-weight: 600; margin-bottom: 4px; color: #7a5a0f; }
+  .legend { margin-top: 26px; padding: 18px; background: #fff; border-radius: 8px; border: 1px solid #e4e0d6; font-size: 14px; line-height: 1.55; }
+  .legend h4 { margin: 0 0 8px; }
+  .flow { margin-top: 24px; padding: 18px 22px; background: #fff; border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.7; }
+  .flow ol { margin: 0; padding-left: 20px; }
+  .tag { display: inline-block; background: var(--accent); color: #111; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; margin-right: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Two-Track Pricing Agent</h1>
+  <p class="sub">Architecture. Inputs on the left, deterministic tools in the middle, grounded answer on the right.</p>
+
+  <div class="diagram">
+
+    <div class="row">
+      <div class="node node-user">
+        <h3>1. USER</h3>
+        <p>GTM, finance, or leadership team member asks a question in natural language.
+        Examples: "Quote Elite + Creator Pro", "Project revenue for 100 Pro customers",
+        "Which tier fits a company with 30 hires/yr?"</p>
+      </div>
+    </div>
+    <div class="arrow">&#8595;</div>
+
+    <div class="row">
+      <div class="node node-llm">
+        <h3>2. CLAUDE (LLM)</h3>
+        <p>Reads the system prompt + user question. Decides <b>which tool to call</b> and with what arguments.
+        Never invents prices; orchestrates only. Runs on <code style="color:#ffd37a;">claude-sonnet-4-6</code>.</p>
+      </div>
+    </div>
+    <div class="arrow">&#8595;  tool_use  &#8595;</div>
+
+    <div class="tools-grid">
+      <div class="tool-card"><code>quote_package</code>Line-item quote, auto-applies 20% bundle discount when both tracks are selected.</div>
+      <div class="tool-card"><code>project_revenue</code>Multi-cohort revenue projection with per-cohort ARPA and blended ARPA.</div>
+      <div class="tool-card"><code>recommend_tier</code>Rules-based tier fit based on annual hires, campaigns, ATS needs.</div>
+      <div class="tool-card"><code>lookup_tier_detail</code>Full feature record for a single tier. Sales-enablement depth.</div>
+      <div class="tool-card"><code>list_all_bundles</code>Canonical All-Access bundle catalog with list, discounted, and savings.</div>
+    </div>
+
+    <div class="arrow">&#8595;  reads from  &#8595;</div>
+
+    <div class="row">
+      <div class="node node-data">
+        <h3>3. PRICING DATA (source of truth)</h3>
+        <p>Structured Python dictionaries encoding the two-track pricing model:
+        Hiring tiers (Starter / Pro / Elite / Enterprise), Creator tiers
+        (Creator Starter / Creator Pro / Enterprise), and the 20% All-Access bundle rule.</p>
+      </div>
+    </div>
+    <div class="arrow">&#8593;  tool_result  &#8593;</div>
+
+    <div class="row">
+      <div class="node node-llm">
+        <h3>4. CLAUDE (synthesis turn)</h3>
+        <p>Receives tool output as structured JSON. Formats a readable answer
+        with the numbers grounded in the tool's math. May call another tool if needed
+        (agent loop supports up to 6 turns).</p>
+      </div>
+    </div>
+    <div class="arrow">&#8595;</div>
+
+    <div class="row">
+      <div class="node node-output">
+        <h3>5. ANSWER</h3>
+        <p>Natural-language response back to the user: a quote summary, a projection,
+        a tier recommendation with rationale, or a feature comparison.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="flow">
+    <h4>Example flow: "Quote the flagship bundle for a mid-market prospect"</h4>
+    <ol>
+      <li><b>User prompt</b> goes to Claude.</li>
+      <li>Claude identifies intent &rarr; calls <code>quote_package(hiring_tier="elite", creator_tier="creator_pro")</code>.</li>
+      <li>Tool reads <code>pricing_data.py</code>, computes subtotal $19,998, applies 20% discount = $4,000, returns $15,998.</li>
+      <li>Claude gets the JSON back and writes: "Flagship All-Access: <b>$15,998/yr</b> (saves $4,000 vs list)."</li>
+    </ol>
+  </div>
+
+  <div class="legend">
+    <h4>Why this architecture?</h4>
+    <span class="tag">RELIABILITY</span> The model never generates a price. Math happens in deterministic Python, so every answer is auditable.<br/>
+    <span class="tag">EXTENSIBLE</span> Adding a new tool (e.g. churn model, ARR forecast) is a new function + a new schema entry.<br/>
+    <span class="tag">TESTABLE</span> Tools are pure functions with unit tests. CI can catch pricing drift.<br/>
+    <span class="tag">FAST</span> Most questions resolve in one tool call and one synthesis turn.
+  </div>
+
+</div>
+</body>
+</html>
