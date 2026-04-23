@@ -140,4 +140,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Acknowledgments
 
-Built as a learning project to understand the Claude Agent SDK pattern end to end: data, tools, LLM orchestration, testing, and extensibility. Inspired by the real pricing challenges faced by early-stage B2B SaaS teams.
+Built by Ashutosh Dixit (AKD) — Product & Project Manager, MBA (Ivey Business School, 2026). Inspired by the real pricing challenges faced by early-stage B2B SaaS teams.
